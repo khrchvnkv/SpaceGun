@@ -1,3 +1,4 @@
+using Common.Infrastructure.Factories.BulletFactory;
 using Common.Infrastructure.Factories.UIFactory;
 using Common.Infrastructure.Factories.Zenject;
 using Common.Infrastructure.Services.AssetsManagement;
@@ -49,6 +50,7 @@ namespace Common.Infrastructure
         private void BindFactories()
         {
             Container.Bind<IUIFactory>().To<UIFactory>().FromNew().AsSingle();
+            Container.Bind<IBulletFactory>().To<BulletFactory>().FromNew().AsSingle();
             Container.Bind<IZenjectFactory>().To<ZenjectFactory>().AsSingle();
         }
     }
