@@ -17,7 +17,7 @@ namespace Common.UnityLogic.TimeSlow
 
         private class BodyData
         {
-            public readonly float Magnitude;
+            public float Magnitude { get; set; }
             public Vector2 UnscaledVelocity { get; set; }
             public Vector2? LastVelocity { get; set; }
 
@@ -62,7 +62,7 @@ namespace Common.UnityLogic.TimeSlow
         private void AddBody(in Rigidbody2D rb)
         {
             var info = new BodyData(rb);
-            rb.gravityScale = TimeFactor;
+            rb.gravityScale = Mathf.Pow(TimeFactor, 2);
             _bodyInfos.Add(rb, info);
         }
 
@@ -70,7 +70,7 @@ namespace Common.UnityLogic.TimeSlow
         {
             var info = _bodyInfos[rb];
             rb.gravityScale = 1;
-            rb.velocity = rb.velocity.normalized * info.UnscaledVelocity.magnitude;
+            rb.velocity = info.UnscaledVelocity.normalized * info.Magnitude;
             _bodyInfos.Remove(rb);
         }
 
@@ -78,13 +78,15 @@ namespace Common.UnityLogic.TimeSlow
         {
             if (info.LastVelocity.HasValue)
             {
-                if (Vector2.Dot(rb.velocity, info.UnscaledVelocity) < 0.0f)
+                var rbVelocity = rb.velocity;
+
+                if (Vector2.Dot(rbVelocity, info.UnscaledVelocity) < 0.8f)
                 {
-                    var magnitude = info.UnscaledVelocity.magnitude;
-                    info.UnscaledVelocity = rb.velocity.normalized * magnitude;
+                    info.Magnitude = rbVelocity.magnitude / TimeFactor;
+                    info.UnscaledVelocity = rbVelocity.normalized * info.Magnitude;
                 }
 
-                var acceleration = (rb.velocity - info.LastVelocity.Value).normalized *
+                var acceleration = (rbVelocity - info.LastVelocity.Value).normalized *
                                    (TimeFactor * info.Magnitude * Time.fixedDeltaTime);
                     
                 info.UnscaledVelocity += acceleration;

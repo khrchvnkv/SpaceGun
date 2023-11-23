@@ -1,4 +1,3 @@
-using System;
 using Common.Infrastructure.Factories.BulletFactory;
 using Common.Infrastructure.Services.StaticData;
 using Common.StaticData;
