@@ -36,9 +36,7 @@ namespace Common.UnityLogic.TimeSlow
         {
             if (other.TryGetComponent(out BulletPhysic bulletPhysic) && !_bodyInfos.ContainsKey(bulletPhysic.Rigidbody))
             {
-                var info = new BodyData(bulletPhysic.Rigidbody);
-                bulletPhysic.Rigidbody.gravityScale = TimeFactor;
-                _bodyInfos.Add(bulletPhysic.Rigidbody, info);
+                AddBody(bulletPhysic.Rigidbody);
             }
         }
 
@@ -46,11 +44,7 @@ namespace Common.UnityLogic.TimeSlow
         {
             if (other.TryGetComponent(out BulletPhysic bulletPhysic) && _bodyInfos.ContainsKey(bulletPhysic.Rigidbody))
             {
-                var rb = bulletPhysic.Rigidbody;
-                var info = _bodyInfos[rb];
-                bulletPhysic.Rigidbody.gravityScale = 1;
-                rb.velocity = rb.velocity.normalized * info.UnscaledVelocity.magnitude;
-                _bodyInfos.Remove(rb);
+                RemoveBody(bulletPhysic.Rigidbody);
             }
         }
         
@@ -61,23 +55,43 @@ namespace Common.UnityLogic.TimeSlow
                 var rb = pair.Key;
                 var info = pair.Value;
  
-                if (info.LastVelocity.HasValue)
-                {
-                    if (Vector2.Dot(rb.velocity, info.UnscaledVelocity) < 0.0f)
-                    {
-                        var magnitude = info.UnscaledVelocity.magnitude;
-                        info.UnscaledVelocity = rb.velocity.normalized * magnitude;
-                    }
+                UpdateBody(rb, info);
+            }
+        }
 
-                    var acceleration = (rb.velocity - info.LastVelocity.Value).normalized *
-                                       (TimeFactor * info.Magnitude * Time.fixedDeltaTime);
-                    
-                    info.UnscaledVelocity += acceleration;
+        private void AddBody(in Rigidbody2D rb)
+        {
+            var info = new BodyData(rb);
+            rb.gravityScale = TimeFactor;
+            _bodyInfos.Add(rb, info);
+        }
+
+        private void RemoveBody(in Rigidbody2D rb)
+        {
+            var info = _bodyInfos[rb];
+            rb.gravityScale = 1;
+            rb.velocity = rb.velocity.normalized * info.UnscaledVelocity.magnitude;
+            _bodyInfos.Remove(rb);
+        }
+
+        private void UpdateBody(in Rigidbody2D rb, in BodyData info)
+        {
+            if (info.LastVelocity.HasValue)
+            {
+                if (Vector2.Dot(rb.velocity, info.UnscaledVelocity) < 0.0f)
+                {
+                    var magnitude = info.UnscaledVelocity.magnitude;
+                    info.UnscaledVelocity = rb.velocity.normalized * magnitude;
                 }
 
-                info.LastVelocity = rb.velocity = info.UnscaledVelocity * TimeFactor;
-                Debug.DrawRay(rb.position, rb.position + info.UnscaledVelocity, Color.green);
+                var acceleration = (rb.velocity - info.LastVelocity.Value).normalized *
+                                   (TimeFactor * info.Magnitude * Time.fixedDeltaTime);
+                    
+                info.UnscaledVelocity += acceleration;
             }
+
+            info.LastVelocity = rb.velocity = info.UnscaledVelocity * TimeFactor;
+            Debug.DrawRay(rb.position, rb.position + info.UnscaledVelocity, Color.green);
         }
     }
 }
